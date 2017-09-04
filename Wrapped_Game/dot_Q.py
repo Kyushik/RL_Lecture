@@ -55,7 +55,7 @@ class GameState:
 		pygame.init()
 		FPS_CLOCK = pygame.time.Clock()
 		DISPLAYSURF = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
-		pygame.display.set_caption('Dot Chasing')
+		pygame.display.set_caption('Dot')
 		BASIC_FONT = pygame.font.Font('freesansbold.ttf', 18)
 		
 		Movement_list = ['North', 'South', 'West', 'East', 'Stop']
@@ -73,13 +73,14 @@ class GameState:
 		self.Game_board_state, self.Coordinate_info = self.drawGameBoard(difficulty)
 		self.checkForQuit()
 		self.drawBasicBoard()		
+
 		# initialize the position of myself, enemy, food
 		self.My_position = self.Coordinate_info[0][0]
 		self.Enemy_list = self.Coordinate_info[1]
 		self.Food_list = self.Coordinate_info[2]
 		self.count_init = 0
 		self.reward_food = 1
-		self.reward_enemy = -100
+		self.reward_enemy = -1
 
 		self.count_food = 0
 
@@ -112,7 +113,7 @@ class GameState:
 		scoreRect = scoreSurf.get_rect()
 		scoreRect.topleft = (WINDOW_WIDTH - 200, 10)
 		
-		self.drawBasicBoard()
+		# self.drawBasicBoard()
 
 		# self.Game_board_state, self.Coordinate_info = self.drawGameBoard(difficulty)
 		self.checkForQuit()
@@ -124,14 +125,11 @@ class GameState:
 		self.My_position = self.Coordinate_info[0][0]
 		self.Enemy_list = self.Coordinate_info[1]
 		self.Food_list = self.Coordinate_info[2]
-		
+
 		self.Last_enemy_move = []
 		for i in range(len(self.Enemy_list)):
 			self.Last_enemy_move.append('Stop')
-			
-	####################################### Auto mode #################################
-		
-		# self.DrawGameBoardState(self.Game_board_state)
+
 		self.DrawGameBoardState()
 		self.Drawlines()
 
@@ -157,13 +155,13 @@ class GameState:
 		
 		reward = -0.01
 
-		# #move enemy 
+		#move enemy 
 		for i in range(len(self.Enemy_list)):
 			valid_move_list = self.ValidMove_list((self.Enemy_list[i][0], self.Enemy_list[i][1]))
 			if self.Last_enemy_move[i] in valid_move_list:
 				valid_move_list.remove(self.Last_enemy_move[i])
 			valid_move = random.choice(valid_move_list)
-			
+
 			if valid_move == 'North':
 				self.Game_board_state[self.Enemy_list[i][1] - 1][self.Enemy_list[i][0]] = '-'
 				self.Game_board_state[self.Enemy_list[i][1]][self.Enemy_list[i][0]] = 0
@@ -193,7 +191,6 @@ class GameState:
 		for i in range(len(self.Food_list)):
 			self.Game_board_state[self.Food_list[i][1]][self.Food_list[i][0]] = '+'
 
-
 		# Eat the foods 
 		if self.My_position in self.Food_list:
 			self.Food_list.remove(self.My_position)
@@ -203,37 +200,25 @@ class GameState:
 			self.count_food += 1
 			self.Food_list.append(self.Get_random_position())
 
-		# if self.count_food == 5:
-		# 	terminal = True 
-		# 	image_data = pygame.surfarray.array3d(pygame.display.get_surface())
-
-		# 	self.reinit()
-		# 	pygame.display.update()
-		# 	return image_data, reward, terminal
-
 		# Killed by enemy
 		if self.My_position in self.Enemy_list:
 			reward = self.reward_enemy
 			self.score -= self.reward_enemy
-			image_data = pygame.surfarray.array3d(pygame.display.get_surface())
-			# print('\n')
-			# print('----------------------------------------------------------')
-			# print('your final score is ' + str(self.score))
-			# print('----------------------------------------------------------')
-			# print('\n')
+			state = (tuple(self.My_position), tuple(self.Enemy_list[0]), tuple(self.Food_list[0]))
 			terminal = True 
 
 			self.reinit()
 			pygame.display.update()
-			return image_data, reward, terminal
+			return state, reward, terminal
 
 		score_SURF, score_RECT = self.makeText('score: ' + str(self.score) + '      ', WHITE, BLACK, WINDOW_WIDTH - 200, 10)
 		DISPLAYSURF.blit(score_SURF, score_RECT)
 
 		pygame.display.update()
 		self.checkForQuit()
-		image_data = pygame.surfarray.array3d(pygame.display.get_surface())
-		return image_data, reward, terminal
+
+		state = (tuple(self.My_position), tuple(self.Enemy_list[0]), tuple(self.Food_list[0]))
+		return state, reward, terminal
 
 	def terminate(self):
 		pygame.quit()
@@ -258,8 +243,7 @@ class GameState:
 		for i in range(GAME_BOARD_HORIZONTAL+1):		
 			for j in range(GAME_BOARD_VERTICAL+1):
 				pygame.draw.rect(DISPLAYSURF, gameboard_Color, (GAME_BOARD_GAP + i * GAME_BOARD_SIZE, 50 + GAME_BOARD_GAP + j * GAME_BOARD_SIZE, GAME_BOARD_SIZE, GAME_BOARD_SIZE))
-				# pygame.draw.line(DISPLAYSURF, line_Color, (GAME_BOARD_GAP + i * GAME_BOARD_SIZE, GAME_BOARD_GAP + 50),(GAME_BOARD_GAP + i * GAME_BOARD_SIZE, 50 + GAME_BOARD_GAP + GAME_BOARD_VERTICAL * GAME_BOARD_SIZE),2)
-				# pygame.draw.line(DISPLAYSURF, line_Color, (GAME_BOARD_GAP, 50 + GAME_BOARD_GAP + j * GAME_BOARD_SIZE), (GAME_BOARD_GAP + GAME_BOARD_HORIZONTAL * GAME_BOARD_SIZE, 50 + GAME_BOARD_GAP + j * GAME_BOARD_SIZE),2)
+
 	
 	def Drawlines(self):
 		for i in range(GAME_BOARD_HORIZONTAL+1):		
@@ -269,66 +253,11 @@ class GameState:
 							
 	def drawGameBoard(self,difficulty):
 		if difficulty == 'Easy':
-			# Game_board_state = [[ 0,  0, 0, 0,  0, 0, 0 ],\
-			# 					[ 0,  0, 0, 0,  0, 0, 0 ],\
-			# 					[ 0,  0, 0, 0,  0, 0, 0 ],\
-			# 					['@', 0, 0,'+', 0, 0,'-'],\
-			# 					[ 0,  0, 0, 0,  0, 0, 0 ],\
-			# 					[ 0,  0, 0, 0,  0, 0, 0 ],\
-			# 					[ 0,  0, 0, 0,  0, 0, 0 ]]
-
 			Game_board_state = [[ 0,  0, 0,  0, 0 ],\
 								[ 0,  0, 0,  0, 0 ],\
 								['@', 0,'+', 0,'-'],\
 								[ 0,  0, 0,  0, 0 ],\
 								[ 0,  0, 0,  0, 0 ]]
-
-
-			# Game_board_state = [[ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, '@', 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],\
-			# 					[ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],\
-			# 					[ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],\
-			# 					[ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],\
-			# 					[ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],\
-			# 					[ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],\
-			# 					[ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],\
-			# 					[ 0,  0, '-', 0,  0,  0, '-', 0,  0,  0,  0,  0, '+', 0,  0,  0,  0,  0, '-', 0,  0,  0, '-', 0,  0],\
-			# 					[ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],\
-			# 					[ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],\
-			# 					[ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],\
-			# 					[ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],\
-			# 					[ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],\
-			# 					[ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0]]
-		
-		elif difficulty == 'Medium':
-			Game_board_state = [[ 1,  0,  1,  0,  1,  0,  0,  1,  0,  0,  0,  0, '@', 0,  0,  0,  0,  1,  0,  0,  1,  0,  1,  0,  1],\
-								[ 0,  0,  0,  0,  0,  0,  0,  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  0,  0,  0,  0,  0,  0,  0],\
-								[ 0,  1,  1,  0,  1,  0,  0,  1,  1,  1,  1,  0,  0,  0,  1,  1,  1,  1,  0,  0,  1,  0,  1,  1,  0],\
-								[ 0,  1, '+','-', 1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1, '-','+', 1,  0],\
-								[ 0,  1,  1,  0,  1,  0,  0,  1,  1,  1,  1,  0,  1,  0,  1,  1,  1,  1,  0,  0,  1,  0,  1,  1,  0],\
-								[ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],\
-								[ 1,  0,  1,  0,  1,  0,  1,  0,  1,  0,  1,  1,  1,  1,  1,  0,  1,  0,  1,  0,  1,  0,  1,  0,  1],\
-								[ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],\
-								[ 0,  1,  1,  0,  1,  0,  0,  1,  1,  1,  1,  0,  1,  0,  1,  1,  1,  1,  0,  0,  1,  0,  1,  1,  0],\
-								[ 0,  1, '+','-', 1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1, '-','+', 1,  0],\
-								[ 0,  1,  1,  0,  1,  0,  0,  1,  1,  1,  1,  0,  0,  0,  1,  1,  1,  1,  0,  0,  1,  0,  1,  1,  0],\
-								[ 0,  0,  0,  0,  0,  0,  0,  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  0,  0,  0,  0,  0, 0,  0],\
-								[ 1,  0,  1,  0,  1,  0,  0,  1,  0,  1, '+', 1,  0,  1, '+', 1,  0,  1,  0,  0,  1,  0,  1,  0,  1],\
-								[ 0,  0,  0,  0,  0,  0,  0,  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  0,  0,  0,  0,  0,  0,  0]]
-		elif difficulty == 'Hard':				
-			Game_board_state = [['+', 0,  0,  0,  1,  0,  0,  0,  0,  0, '@', 0,  0,  0,  0,  0,  0,  0,  0,  0, '+', 0,  0,  0,  0],\
-								[ 0,  1,  1,  0,  1,  1,  1,  1,  1,  0,  1,  1,  1,  1,  1,  1,  0,  1,  1,  1,  1,  1,  1,  1,  0],\
-								[ 0,  0,  0, '-', 1, '-', 0,  0,  0,  0,  0,  0,  0, '+', 0,  0, '-', 0,  0,  0, '+', 0,  0,  0,  0],\
-								[ 1,  1,  1,  0,  1,  0,  1,  1,  1,  0,  1,  1,  1,  1,  1,  1,  0,  1,  1,  1,  0,  1,  1,  1,  0],\
-								[ 0,  0,  0,  0,  1,  0,  0, '+', 0,  0,  1,  1,  1,  1,  1,  1,  0,  1,  1,  1,  0,  1,  1,  1,  0],\
-								[ 1,  1,  1,  0,  1,  1,  1,  1,  1,  0,  1,  1,  1,  1,  1,  1,  0,  1,  1,  1,  0,  1,  1,  1,  0],\
-								[ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, '+', 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],\
-								[ 0,  1,  1,  0,  1,  1,  1,  1,  1,  0,  1,  1,  1,  1,  1,  1,  0,  1,  1,  1,  1,  1,  1,  1,  0],\
-								[ 0,  0,  0,  0,  0,  0, '+', 0,  0,  0, '-', 0,  0,  0,  0,  0,  0, '-', 0,  0, '+', 0,  0,  0,  0],\
-								[ 1,  1,  1,  0,  1,  1,  1,  1,  1,  0,  1,  0,  1,  1,  0,  1,  0,  1,  1,  1,  1,  1,  1,  1,  0],\
-								[ 0,  0,  0, '-', 0,  0,  1,  0,  0,  0,  1,  0,  1,  1,  0,  1,  0,  0,  0,  0,  1,  0,  0,  0,  0],\
-								[ 0,  1,  1,  0,  1,  0,  1,  0,  1,  0,  1,  0,  1,  1,  0,  1,  0,  1,  1,  0,  1,  0,  1,  1,  0],\
-								[ 0,  1,  1,  0,  1,  0,  1,  0,  1,  0,  0,  0,  1,  1,  0,  0,  0,  1,  1,  0,  1,  0,  1,  1,  0],\
-								['+', 0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  1,  1,  1,  1,  1,  0,  0,  0,  0,  0,  0,  0,  0,  0]]
 
 		# Add coordinate info
 		Coordinate_info = [[],[],[]]
@@ -348,7 +277,6 @@ class GameState:
 					pygame.draw.rect(DISPLAYSURF, enemy_Color, (GAME_BOARD_GAP + i * GAME_BOARD_SIZE + 5, 50 + GAME_BOARD_GAP + j * GAME_BOARD_SIZE + 5, GAME_BOARD_SIZE - 5, GAME_BOARD_SIZE - 5))
 				elif Game_board_state[j][i] == '@':
 					pygame.draw.rect(DISPLAYSURF, my_Color, (GAME_BOARD_GAP + i * GAME_BOARD_SIZE + 5, 50 + GAME_BOARD_GAP + j * GAME_BOARD_SIZE + 5, GAME_BOARD_SIZE - 5, GAME_BOARD_SIZE - 5))
-					# pygame.draw.circle(DISPLAYSURF, my_Color, center_point, radius, 10)  
 					Coordinate_info[0].append([i,j])
 				
 		pygame.display.update()			
@@ -364,18 +292,16 @@ class GameState:
 				if self.Game_board_state[j][i] == 1:
 					pygame.draw.rect(DISPLAYSURF, obstacle_Color, (GAME_BOARD_GAP + i * GAME_BOARD_SIZE, 50 + GAME_BOARD_GAP + j * GAME_BOARD_SIZE, GAME_BOARD_SIZE, GAME_BOARD_SIZE))
 				elif self.Game_board_state[j][i] == '+':
-					# pygame.draw.circle(DISPLAYSURF, food_Color, (GAME_BOARD_GAP + i * GAME_BOARD_SIZE + GAME_BOARD_SIZE/2 + 1, 50 + GAME_BOARD_GAP + j * GAME_BOARD_SIZE + GAME_BOARD_SIZE/2 + 1), GAME_BOARD_SIZE/2  - 2, 10)
 					pygame.draw.polygon(DISPLAYSURF, food_Color, ((center_point[0], center_point[1] + radius - 3), (center_point[0] + radius - 3, center_point[1]), (center_point[0], center_point[1] - radius + 3), (center_point[0] - radius + 3, center_point[1])), 10)
 				elif self.Game_board_state[j][i] == '-':
 					pygame.draw.rect(DISPLAYSURF, enemy_Color, (GAME_BOARD_GAP + i * GAME_BOARD_SIZE + 5, 50 + GAME_BOARD_GAP + j * GAME_BOARD_SIZE + 5, GAME_BOARD_SIZE - 10, GAME_BOARD_SIZE - 10))
 				elif self.Game_board_state[j][i] == '@':
 					pygame.draw.rect(DISPLAYSURF, my_Color, (GAME_BOARD_GAP + i * GAME_BOARD_SIZE + 5, 50 + GAME_BOARD_GAP + j * GAME_BOARD_SIZE + 5, GAME_BOARD_SIZE - 5, GAME_BOARD_SIZE - 5))
-					# pygame.draw.circle(DISPLAYSURF, my_Color, center_point, radius, 10)  
 				
 		pygame.display.update()			
 
 	def ValidMove_list(self, state):
-		# return the valid move( no obstacles and no out of bound)
+    		# return the valid move( no obstacles and no out of bound)
 		state_x = state[0]
 		state_y = state[1]
 		valid_move = []
@@ -388,6 +314,7 @@ class GameState:
 		if state_x + 1 <= GAME_BOARD_HORIZONTAL - 1 and self.Game_board_state[state_y][state_x + 1] != 1:
 			valid_move.append('East')
 		valid_move.append('Stop')
+
 		return valid_move
 
 	def Get_random_position(self):
