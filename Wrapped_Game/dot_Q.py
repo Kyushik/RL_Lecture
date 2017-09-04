@@ -6,8 +6,8 @@ import random, pygame, time, sys, copy
 from pygame.locals import *
 
 FPS = 30
-WINDOW_WIDTH = 240
-WINDOW_HEIGHT = 280
+WINDOW_WIDTH = 200
+WINDOW_HEIGHT = 240
 GAME_BOARD_GAP = 20 
 ############## Automatic setting (later work)
 GAME_BOARD_SIZE = 40
@@ -74,10 +74,6 @@ class GameState:
 		self.checkForQuit()
 		self.drawBasicBoard()		
 
-		# initialize the position of myself, enemy, food
-		self.My_position = self.Coordinate_info[0][0]
-		self.Enemy_list = self.Coordinate_info[1]
-		self.Food_list = self.Coordinate_info[2]
 		self.count_init = 0
 		self.reward_food = 1
 		self.reward_enemy = -1
@@ -95,10 +91,6 @@ class GameState:
 		self.checkForQuit()
 		
 		self.drawBasicBoard()		
-		# initialize the position of myself, enemy, food
-		self.My_position = self.Coordinate_info[0][0]
-		self.Enemy_list = self.Coordinate_info[1]
-		self.Food_list = self.Coordinate_info[2]
 		self.count_init = 0
 		self.count_food = 0
 		
@@ -113,23 +105,23 @@ class GameState:
 		scoreRect = scoreSurf.get_rect()
 		scoreRect.topleft = (WINDOW_WIDTH - 200, 10)
 		
-		# self.drawBasicBoard()
-
-		# self.Game_board_state, self.Coordinate_info = self.drawGameBoard(difficulty)
 		self.checkForQuit()
+
+		if self.count_init == 0:
+			# Initialize my position
+			self.My_position = self.Get_random_position()
+			self.Game_board_state[self.My_position[1]][self.My_position[0]] = '@' 
+
+			# Initialize enemy position
+			self.Enemy_list = [self.Get_random_position()]
+			for i in range(len(self.Enemy_list)):
+				self.Game_board_state[self.Enemy_list[i][1]][self.Enemy_list[i][0]] = '-'
+			
+			# Initialize food position
+			self.Food_list = [self.Get_random_position()]
+			for i in range(len(self.Food_list)):
+				self.Game_board_state[self.Food_list[i][1]][self.Food_list[i][0]] = '+'			
 		
-		# initialize the position of myself, enemy, food
-		# if self.count_init == 0:
-		# 	self.Game_board_state, self.Coordinate_info = self.drawGameBoard(difficulty)
-
-		self.My_position = self.Coordinate_info[0][0]
-		self.Enemy_list = self.Coordinate_info[1]
-		self.Food_list = self.Coordinate_info[2]
-
-		self.Last_enemy_move = []
-		for i in range(len(self.Enemy_list)):
-			self.Last_enemy_move.append('Stop')
-
 		self.DrawGameBoardState()
 		self.Drawlines()
 
@@ -152,38 +144,12 @@ class GameState:
 			self.Game_board_state[self.My_position[1]][self.My_position[0] - 1] = '@'
 			self.Game_board_state[self.My_position[1]][self.My_position[0]] = 0
 			self.My_position[0] = self.My_position[0] - 1
-		
+
 		reward = -0.01
 
-		#move enemy 
+		#Draw enemy 
 		for i in range(len(self.Enemy_list)):
-			valid_move_list = self.ValidMove_list((self.Enemy_list[i][0], self.Enemy_list[i][1]))
-			if self.Last_enemy_move[i] in valid_move_list:
-				valid_move_list.remove(self.Last_enemy_move[i])
-			valid_move = random.choice(valid_move_list)
-
-			if valid_move == 'North':
-				self.Game_board_state[self.Enemy_list[i][1] - 1][self.Enemy_list[i][0]] = '-'
-				self.Game_board_state[self.Enemy_list[i][1]][self.Enemy_list[i][0]] = 0
-				self.Enemy_list[i][1] = self.Enemy_list[i][1] - 1
-				self.Last_enemy_move[i] = 'South'
-			elif valid_move == 'South':
-				self.Game_board_state[self.Enemy_list[i][1] + 1][self.Enemy_list[i][0]] = '-'
-				self.Game_board_state[self.Enemy_list[i][1]][self.Enemy_list[i][0]] = 0
-				self.Enemy_list[i][1] = self.Enemy_list[i][1] + 1
-				self.Last_enemy_move[i] = 'North'
-			elif valid_move == 'East':
-				self.Game_board_state[self.Enemy_list[i][1]][self.Enemy_list[i][0] + 1] = '-'
-				self.Game_board_state[self.Enemy_list[i][1]][self.Enemy_list[i][0]] = 0
-				self.Enemy_list[i][0] = self.Enemy_list[i][0] + 1
-				self.Last_enemy_move[i] = 'West'
-			elif valid_move == 'West':
-				self.Game_board_state[self.Enemy_list[i][1]][self.Enemy_list[i][0] - 1] = '-'
-				self.Game_board_state[self.Enemy_list[i][1]][self.Enemy_list[i][0]] = 0
-				self.Enemy_list[i][0] = self.Enemy_list[i][0] - 1
-				self.Last_enemy_move[i] = 'East'
-			else:
-				self.Last_enemy_move[i] = 'Stop'
+			self.Game_board_state[self.Enemy_list[i][1]][self.Enemy_list[i][0]] = '-'
 
 		self.checkForQuit()
 
@@ -193,12 +159,15 @@ class GameState:
 
 		# Eat the foods 
 		if self.My_position in self.Food_list:
-			self.Food_list.remove(self.My_position)
-
 			reward = self.reward_food
 			self.score += 1.0
 			self.count_food += 1
-			self.Food_list.append(self.Get_random_position())
+
+			state = (tuple(self.My_position), tuple(self.Enemy_list[0]), tuple(self.Food_list[0]))
+			terminal = True
+
+			self.reinit()
+			return state, reward, terminal
 
 		# Killed by enemy
 		if self.My_position in self.Enemy_list:
@@ -208,14 +177,12 @@ class GameState:
 			terminal = True 
 
 			self.reinit()
-			pygame.display.update()
 			return state, reward, terminal
-
-		score_SURF, score_RECT = self.makeText('score: ' + str(self.score) + '      ', WHITE, BLACK, WINDOW_WIDTH - 200, 10)
-		DISPLAYSURF.blit(score_SURF, score_RECT)
 
 		pygame.display.update()
 		self.checkForQuit()
+
+		self.count_init += 1
 
 		state = (tuple(self.My_position), tuple(self.Enemy_list[0]), tuple(self.Food_list[0]))
 		return state, reward, terminal
@@ -253,11 +220,10 @@ class GameState:
 							
 	def drawGameBoard(self,difficulty):
 		if difficulty == 'Easy':
-			Game_board_state = [[ 0,  0, 0,  0, 0 ],\
-								[ 0,  0, 0,  0, 0 ],\
-								['@', 0,'+', 0,'-'],\
-								[ 0,  0, 0,  0, 0 ],\
-								[ 0,  0, 0,  0, 0 ]]
+			Game_board_state = [[ 0, 0, 0, 0 ],\
+								[ 0, 0, 0, 0 ],\
+								[ 0, 0, 0, 0 ],\
+								[ 0, 0, 0, 0 ]]
 
 		# Add coordinate info
 		Coordinate_info = [[],[],[]]
@@ -301,7 +267,7 @@ class GameState:
 		pygame.display.update()			
 
 	def ValidMove_list(self, state):
-    		# return the valid move( no obstacles and no out of bound)
+    	# return the valid move( no obstacles and no out of bound)
 		state_x = state[0]
 		state_y = state[1]
 		valid_move = []
@@ -319,12 +285,10 @@ class GameState:
 
 	def Get_random_position(self):
 		while True:
-			random_x = random.randint(1,GAME_BOARD_HORIZONTAL-1)
-			random_y = random.randint(1,GAME_BOARD_VERTICAL-1)
+			random_x = random.randint(0,GAME_BOARD_HORIZONTAL-1)
+			random_y = random.randint(0,GAME_BOARD_VERTICAL-1)
 
-			if self.Game_board_state[random_y][random_x] != 1 and \
-			   self.Game_board_state[random_y][random_x] != '-' and \
-			   self.Game_board_state[random_y][random_x] != '@':
+			if self.Game_board_state[random_y][random_x] == 0:
 				return [random_x, random_y]
 				break
 

@@ -124,7 +124,7 @@ class GameState:
 		self.My_position = self.Coordinate_info[0][0]
 		self.Enemy_list = self.Coordinate_info[1]
 		self.Food_list = self.Coordinate_info[2]
-		
+			
 		self.Last_enemy_move = []
 		for i in range(len(self.Enemy_list)):
 			self.Last_enemy_move.append('Stop')
@@ -224,7 +224,6 @@ class GameState:
 			terminal = True 
 
 			self.reinit()
-			pygame.display.update()
 			return image_data, reward, terminal
 
 		score_SURF, score_RECT = self.makeText('score: ' + str(self.score) + '      ', WHITE, BLACK, WINDOW_WIDTH - 200, 10)
