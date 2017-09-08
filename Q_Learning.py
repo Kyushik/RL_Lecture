@@ -33,7 +33,7 @@ gamma = 0.99
 first_epsilon = 1.0
 final_epsilon = 0.1
 
-Num_plot_episode = 100
+Num_plot_episode = 200
 
 step = 1
 score = 0 

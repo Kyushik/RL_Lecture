@@ -80,9 +80,10 @@ class GameState:
 
 		self.count_food = 0
 
+		self.result = ''
+
 	def reinit(self):
 		#set up the variables
-		self.score = 0
 		self.Last_enemy_move = []
 
 		difficulty = 'Easy'
@@ -101,9 +102,9 @@ class GameState:
 		DISPLAYSURF.fill(bgColor)
 		terminal = False
 
-		scoreSurf = BASIC_FONT.render('Score: ' + str(self.score), 1, WHITE)
-		scoreRect = scoreSurf.get_rect()
-		scoreRect.topleft = (WINDOW_WIDTH - 200, 10)
+		# scoreSurf = BASIC_FONT.render('Result: ' + str(self.score), 1, WHITE)
+		# scoreRect = scoreSurf.get_rect()
+		# scoreRect.topleft = (WINDOW_WIDTH - 200, 10)
 		
 		self.checkForQuit()
 
@@ -165,6 +166,7 @@ class GameState:
 
 			state = (tuple(self.My_position), tuple(self.Enemy_list[0]), tuple(self.Food_list[0]))
 			terminal = True
+			self.result = 'Win'
 
 			self.reinit()
 			return state, reward, terminal
@@ -172,12 +174,16 @@ class GameState:
 		# Killed by enemy
 		if self.My_position in self.Enemy_list:
 			reward = self.reward_enemy
-			self.score -= self.reward_enemy
+			self.score -= 1
 			state = (tuple(self.My_position), tuple(self.Enemy_list[0]), tuple(self.Food_list[0]))
 			terminal = True 
+			self.result = 'Lose'
 
 			self.reinit()
 			return state, reward, terminal
+
+		score_SURF, score_RECT = self.makeText('Result: ' + str(self.result) + '      ', WHITE, BLACK, WINDOW_WIDTH - 180, 15)
+		DISPLAYSURF.blit(score_SURF, score_RECT)
 
 		pygame.display.update()
 		self.checkForQuit()
