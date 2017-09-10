@@ -26,7 +26,7 @@ Replay_memory = []
 
 Num_Exploration = 10000
 Num_Training = 100000
-Num_Testing  = 1000 
+Num_Testing  = 1000
 
 learning_rate = 0.01
 gamma = 0.99
@@ -71,12 +71,12 @@ while True:
 		next_action = np.zeros([Num_action])
 		next_action_index = random.randint(0, Num_action-1)
 		next_action[next_action_index] = 1
-
+		
 		epsilon = first_epsilon
 
 	elif step <= Num_Exploration + Num_Training:
 		progress = 'Training'
-
+		
 		# Get information from environment with action
 		next_state, reward, terminal = game_state.frame_step(action)
 
@@ -93,11 +93,10 @@ while True:
 			next_action[next_action_index] = 1
 
 		if epsilon > final_epsilon:
-    			epsilon -= first_epsilon/Num_Training
+			epsilon -= first_epsilon/Num_Training
 		
 	elif step <= Num_Exploration + Num_Training + Num_Testing:
 		progress = 'Testing'
-
 		next_state, reward, terminal = game_state.frame_step(action)
 		
 		# Choose greedy action
@@ -107,8 +106,8 @@ while True:
 
 		epsilon = 0
 
-		# # Delay for visualization
-		# time.sleep(0.15)
+		# Delay for visualization
+		time.sleep(0.15)
 
 	else:
 		# Finished!
@@ -133,6 +132,7 @@ while True:
 
 	state = next_state
 	action = next_action
+	action_index = next_action_index
 
 	score += reward
 	step += 1

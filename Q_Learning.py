@@ -108,7 +108,7 @@ while True:
 		print('Finished!')
 		plt.savefig('./Plot/' + date_time + '_' + algorithm + '_' + game_name + '.png')
 		break
-
+	
 	if state in Q_table.keys() and next_state in Q_table.keys():
 		if terminal == True:
 			Q_table[state][action_index] = (1 - learning_rate) * Q_table[state][action_index] + learning_rate * (reward)
