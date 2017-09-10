@@ -14,8 +14,8 @@ import sys
 sys.path.append("Wrapped_Game/")
 import dot_Q as game
 
-# Information
-algorithm = 'Q-learning'
+# Informations
+algorithm = 'SARSA'
 
 # Get parameters
 Num_action = game.Return_Num_Action()
@@ -51,40 +51,46 @@ game_state = game.GameState()
 # action: 0 = south, 1 = north, 2 = East, 3 = West
 # reward: eat food = +1, killed by enemy = -1
 
-# Initial state
-state, _, _ = game_state.frame_step(np.zeros([Num_action]))
-
 # Empty Q table
 Q_table = {}
 
+# Initial state
+state, _, _ = game_state.frame_step(np.zeros([Num_action]))
+
+# Initial action
+action = np.zeros([Num_action])
+action_index = random.randint(0, Num_action-1)
+action[action_index] = 1
+		
 while True:
 	if step <= Num_Exploration:
 		progress = 'Exploration'
 
-		action = np.zeros([Num_action])
-		action_index = random.randint(0, Num_action-1)
-		action[action_index] = 1
-		
 		next_state, reward, terminal = game_state.frame_step(action)
+
+		next_action = np.zeros([Num_action])
+		next_action_index = random.randint(0, Num_action-1)
+		next_action[next_action_index] = 1
 
 		epsilon = first_epsilon
 
 	elif step <= Num_Exploration + Num_Training:
 		progress = 'Training'
 
-		# Choose action
-		if random.random() < epsilon or state not in Q_table.keys() :
+		# Get information from environment with action
+		next_state, reward, terminal = game_state.frame_step(action)
+
+		# Choose next action
+		if random.random() < epsilon or next_state not in Q_table.keys() :
 			# Choose random action
-			action = np.zeros([Num_action])
-			action_index = random.randint(0, Num_action-1)
-			action[action_index] = 1
+			next_action = np.zeros([Num_action])
+			next_action_index = random.randint(0, Num_action-1)
+			next_action[next_action_index] = 1
 		else:
 			# Choose greedy action
-			action = np.zeros([Num_action])
-			action_index = np.argmax(Q_table[state])
-			action[action_index] = 1
-
-		next_state, reward, terminal = game_state.frame_step(action)
+			next_action = np.zeros([Num_action])
+			next_action_index = np.argmax(Q_table[next_state])
+			next_action[next_action_index] = 1
 
 		if epsilon > final_epsilon:
     			epsilon -= first_epsilon/Num_Training
@@ -92,16 +98,17 @@ while True:
 	elif step <= Num_Exploration + Num_Training + Num_Testing:
 		progress = 'Testing'
 
-		# Choose greedy action
-		action = np.zeros([Num_action])
-		action_index = np.argmax(Q_table[state])
-		action[action_index] = 1
-
 		next_state, reward, terminal = game_state.frame_step(action)
+		
+		# Choose greedy action
+		next_action = np.zeros([Num_action])
+		next_action_index = np.argmax(Q_table[next_state])
+		next_action[next_action_index] = 1
+
 		epsilon = 0
 
-		# Delay for visualization
-		time.sleep(0.15)
+		# # Delay for visualization
+		# time.sleep(0.15)
 
 	else:
 		# Finished!
@@ -113,7 +120,7 @@ while True:
 		if terminal == True:
 			Q_table[state][action_index] = (1 - learning_rate) * Q_table[state][action_index] + learning_rate * (reward)
 		else:
-			Q_table[state][action_index] = (1 - learning_rate) * Q_table[state][action_index] + learning_rate * (reward + gamma * max(Q_table[next_state]))
+			Q_table[state][action_index] = (1 - learning_rate) * Q_table[state][action_index] + learning_rate * (reward + gamma * Q_table[next_state][next_action_index])
 
 	elif state not in Q_table.keys():
 		Q_table[state] = []
@@ -125,6 +132,8 @@ while True:
 			Q_table[next_state].append(0)			
 
 	state = next_state
+	action = next_action
+
 	score += reward
 	step += 1
 
@@ -154,5 +163,5 @@ while True:
 			episode += 1
 		score = 0
 
-		# If game is finished, initialize the state
-		state, _, _ = game_state.frame_step(np.zeros([Num_action]))
+		# # If game is finished, initialize the state
+		# state, _, _ = game_state.frame_step(np.zeros([Num_action]))
