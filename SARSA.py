@@ -33,6 +33,8 @@ gamma = 0.99
 first_epsilon = 1.0
 final_epsilon = 0.1
 
+epsilon = first_epsilon
+
 Num_plot_episode = 200
 
 step = 1
@@ -63,18 +65,7 @@ action_index = random.randint(0, Num_action-1)
 action[action_index] = 1
 		
 while True:
-	if step <= Num_Exploration:
-		progress = 'Exploration'
-
-		next_state, reward, terminal = game_state.frame_step(action)
-
-		next_action = np.zeros([Num_action])
-		next_action_index = random.randint(0, Num_action-1)
-		next_action[next_action_index] = 1
-		
-		epsilon = first_epsilon
-
-	elif step <= Num_Exploration + Num_Training:
+	if step <= Num_Training:
 		progress = 'Training'
 		
 		# Get information from environment with action
@@ -95,7 +86,7 @@ while True:
 		if epsilon > final_epsilon:
 			epsilon -= first_epsilon/Num_Training
 		
-	elif step <= Num_Exploration + Num_Training + Num_Testing:
+	elif step <= Num_Training + Num_Testing:
 		progress = 'Testing'
 		next_state, reward, terminal = game_state.frame_step(action)
 		
@@ -163,5 +154,5 @@ while True:
 			episode += 1
 		score = 0
 
-		# # If game is finished, initialize the state
-		# state, _, _ = game_state.frame_step(np.zeros([Num_action]))
+		# If game is finished, initialize the state
+		state, _, _ = game_state.frame_step(np.zeros([Num_action]))

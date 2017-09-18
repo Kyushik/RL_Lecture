@@ -24,7 +24,6 @@ game_name = game.ReturnName()
 # Initial parameters
 Replay_memory = []
 
-Num_Exploration = 10000
 Num_Training = 100000
 Num_Testing  = 1000 
 
@@ -32,6 +31,8 @@ learning_rate = 0.01
 gamma = 0.99
 first_epsilon = 1.0
 final_epsilon = 0.1
+
+epsilon = first_epsilon
 
 Num_plot_episode = 200
 
@@ -58,18 +59,7 @@ state, _, _ = game_state.frame_step(np.zeros([Num_action]))
 Q_table = {}
 
 while True:
-	if step <= Num_Exploration:
-		progress = 'Exploration'
-
-		action = np.zeros([Num_action])
-		action_index = random.randint(0, Num_action-1)
-		action[action_index] = 1
-		
-		next_state, reward, terminal = game_state.frame_step(action)
-
-		epsilon = first_epsilon
-
-	elif step <= Num_Exploration + Num_Training:
+	if step <= Num_Training:
 		progress = 'Training'
 
 		# Choose action
@@ -89,7 +79,7 @@ while True:
 		if epsilon > final_epsilon:
     			epsilon -= first_epsilon/Num_Training
 		
-	elif step <= Num_Exploration + Num_Training + Num_Testing:
+	elif step <= Num_Training + Num_Testing:
 		progress = 'Testing'
 
 		# Choose greedy action
