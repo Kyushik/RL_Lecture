@@ -1,10 +1,8 @@
 # Import modules 
 import sys 
 import pygame
-import cv2
 import random 
 import numpy as np 
-import copy 
 import matplotlib.pyplot as plt 
 import datetime 
 import time 

@@ -126,25 +126,46 @@ class GameState:
 		self.DrawGameBoardState()
 		self.Drawlines()
 
-		if (input[1] == 1) and  ('North' in self.ValidMove_list((self.My_position[0], self.My_position[1]))):
-			self.Game_board_state[self.My_position[1] - 1][self.My_position[0]] = '@'
+		# North
+		if input[1] == 1:
 			self.Game_board_state[self.My_position[1]][self.My_position[0]] = 0
-			self.My_position[1] = self.My_position[1] - 1
-			
-		elif (input[0] == 1) and  ('South' in self.ValidMove_list((self.My_position[0], self.My_position[1]))):
-			self.Game_board_state[self.My_position[1] + 1][self.My_position[0]] = '@'
+			if self.My_position[1] == 0:
+				self.Game_board_state[3][self.My_position[0]] = '@'
+				self.My_position[1] = 3
+			else:
+				self.Game_board_state[self.My_position[1] - 1][self.My_position[0]] = '@'
+				self.My_position[1] = self.My_position[1] - 1
+		
+		# South
+		elif input[0] == 1:
 			self.Game_board_state[self.My_position[1]][self.My_position[0]] = 0
-			self.My_position[1] = self.My_position[1] + 1
-			
-		elif (input[2] == 1) and  ('East' in self.ValidMove_list((self.My_position[0], self.My_position[1]))):
-			self.Game_board_state[self.My_position[1]][self.My_position[0] + 1] = '@'
+			if self.My_position[1] == 3:
+				self.Game_board_state[0][self.My_position[0]] = '@'
+				self.My_position[1] = 0
+			else:
+				self.Game_board_state[self.My_position[1] + 1][self.My_position[0]] = '@'
+				self.My_position[1] = self.My_position[1] + 1
+		
+		# East
+		elif input[2] == 1:
 			self.Game_board_state[self.My_position[1]][self.My_position[0]] = 0
-			self.My_position[0] = self.My_position[0] + 1
-			
-		elif (input[3] == 1) and  ('West' in self.ValidMove_list((self.My_position[0], self.My_position[1]))):
-			self.Game_board_state[self.My_position[1]][self.My_position[0] - 1] = '@'
+			if self.My_position[0] == 3:
+				self.Game_board_state[self.My_position[1]][0] = '@'
+				self.My_position[0] = 0
+			else:
+				self.Game_board_state[self.My_position[1]][self.My_position[0] + 1] = '@'
+				self.My_position[0] = self.My_position[0] + 1
+		
+		# West
+		elif input[3] == 1:
 			self.Game_board_state[self.My_position[1]][self.My_position[0]] = 0
-			self.My_position[0] = self.My_position[0] - 1
+
+			if self.My_position[0] == 0:
+				self.Game_board_state[self.My_position[1]][3] = '@'	
+				self.My_position[0] = 3
+			else:
+				self.Game_board_state[self.My_position[1]][self.My_position[0] - 1] = '@'
+				self.My_position[0] = self.My_position[0] - 1
 
 		reward = -0.01
 
