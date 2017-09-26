@@ -1,5 +1,4 @@
 # Import modules 
-import sys 
 import pygame
 import random 
 import numpy as np 
@@ -9,7 +8,7 @@ import time
 
 # Import game
 import sys
-sys.path.append("Wrapped_Game/")
+sys.path.append("DQN_GAMES/")
 import dot_Q as game
 
 # Informations
@@ -126,10 +125,6 @@ while True:
 	score += reward
 	step += 1
 
-	# Show progress
-	if terminal == True:
-		print('Step: ' + str(step) + ' / ' + 'Episode: ' + str(episode) + ' / ' + 'Progress: ' + progress + ' / ' + 'Epsilon: ' + str(epsilon) + ' / ' + 'Score: ' + str(score))
-
 	# Plotting episode - average score
 	if len(plot_x) % Num_plot_episode == 0 and len(plot_x) != 0 and progress != 'Exploration':
 		plt.xlabel('Episode')
@@ -146,10 +141,12 @@ while True:
 
 	# If terminal
 	if terminal == True:
-		if progress != 'Exploration':
-			plot_x.append(episode)
-			plot_y.append(score)
-			episode += 1
+		# Show Progress
+		print('Step: ' + str(step) + ' / ' + 'Episode: ' + str(episode) + ' / ' + 'Progress: ' + progress + ' / ' + 'Epsilon: ' + str(epsilon) + ' / ' + 'Score: ' + str(score))
+
+		plot_x.append(episode)
+		plot_y.append(score)
+		episode += 1
 		score = 0
 
 		# If game is finished, initialize the state

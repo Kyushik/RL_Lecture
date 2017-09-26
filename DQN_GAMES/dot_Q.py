@@ -42,7 +42,7 @@ enemy_Color = RED
 my_Color = BRIGHT_BLUE
 
 def ReturnName():
-	return 'dot_test'
+	return 'Q_test'
 
 def Return_Num_Action():
     return 4
