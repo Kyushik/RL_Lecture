@@ -167,7 +167,7 @@ class GameState:
 				self.Game_board_state[self.My_position[1]][self.My_position[0] - 1] = '@'
 				self.My_position[0] = self.My_position[0] - 1
 
-		reward = -0.01
+		reward = 0.0
 
 		#Draw enemy 
 		for i in range(len(self.Enemy_list)):

@@ -19,10 +19,8 @@ Num_action = game.Return_Num_Action()
 game_name = game.ReturnName()
 
 # Initial parameters
-Replay_memory = []
-
 Num_Training = 100000
-Num_Testing  = 1000 
+Num_Testing  = 200 
 
 learning_rate = 0.01
 gamma = 0.99
@@ -74,6 +72,14 @@ while True:
 
 		next_state, reward, terminal = game_state.frame_step(action)
 
+		# Update Q-table!
+		if state in Q_table.keys() and next_state in Q_table.keys():
+			if terminal == True:
+				Q_table[state][action_index] = (1 - learning_rate) * Q_table[state][action_index] + learning_rate * (reward)
+			else:
+				Q_table[state][action_index] = (1 - learning_rate) * Q_table[state][action_index] + learning_rate * (reward + gamma * max(Q_table[next_state]))
+
+		# Decrease epsilon while training
 		if epsilon > final_epsilon:
     			epsilon -= first_epsilon/Num_Training
 		
@@ -89,25 +95,20 @@ while True:
 		epsilon = 0
 
 		# Delay for visualization
-		time.sleep(0.15)
+		time.sleep(0.25)
 
 	else:
 		# Finished!
 		print('Finished!')
 		plt.savefig('./Plot/' + date_time + '_' + algorithm + '_' + game_name + '.png')
 		break
-	
-	if state in Q_table.keys() and next_state in Q_table.keys():
-		if terminal == True:
-			Q_table[state][action_index] = (1 - learning_rate) * Q_table[state][action_index] + learning_rate * (reward)
-		else:
-			Q_table[state][action_index] = (1 - learning_rate) * Q_table[state][action_index] + learning_rate * (reward + gamma * max(Q_table[next_state]))
 
-	elif state not in Q_table.keys():
+	# If state or next state is not in Q-table, then add it with zeros
+	if state not in Q_table.keys():
 		Q_table[state] = []
 		for i in range(Num_action):
 			Q_table[state].append(0)
-	else:
+	elif next_state not in Q_table.keys():
 		Q_table[next_state] = []
 		for i in range(Num_action):
 			Q_table[next_state].append(0)			
@@ -117,7 +118,7 @@ while True:
 	step += 1
 
 	# Plotting episode - average score
-	if len(plot_x) % Num_plot_episode == 0 and len(plot_x) != 0 and progress != 'Exploration':
+	if len(plot_x) % Num_plot_episode == 0 and len(plot_x) != 0:
 		plt.xlabel('Episode')
 		plt.ylabel('Score')
 		plt.title(algorithm)
