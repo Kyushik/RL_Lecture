@@ -1,4 +1,4 @@
-# Q-learning algorithm
+# SARSA algorithm
 
 # ---------------------------------------------------
 # Game Information
@@ -20,11 +20,11 @@ sys.path.append("DQN_GAMES/")
 
 import dot_Q as game
 
-class Q_Learning:
+class SARSA:
 	def __init__(self):
 
 		# Game Information
-		self.algorithm = 'Q-learning'
+		self.algorithm = 'SARSA'
 		self.game_name = game.ReturnName()
 
 		# Get parameters
@@ -63,9 +63,13 @@ class Q_Learning:
 		# Define game state
 		game_state = game.GameState()
 
-		# Initialization
+		# Initial state
+		state, _, _ = game_state.frame_step(np.zeros([self.Num_action]))
+
+		# Initial action
 		action = np.zeros([self.Num_action])
-		state, _, _ = game_state.frame_step(action)
+		action_index = random.randint(0, self.Num_action-1)
+		action[action_index] = 1
 
 		while True:
 			# Get progress:
@@ -73,17 +77,17 @@ class Q_Learning:
 			#   Testing:  epsilon = 0
 			self.progress = self.get_progress()
 
-			# Select action: 0 = south, 1 = north, 2 = East, 3 = West
-			action = self.select_action(state)
-
 			# Take action and get info. for update
 			next_state, reward, terminal = game_state.frame_step(action)
+
+			# Select action: 0 = south, 1 = north, 2 = East, 3 = West
+			next_action = self.select_action(next_state)
 
 			# Decrease epsilon for epsilon greedy
 			self.decrease_epsilon()
 
 			# Training the Q-table!
-			self.train(state, action, reward, next_state, terminal)
+			self.train(state, action, reward, next_state, next_action, terminal)
 
 			# Delay for visualization
 			if self.progress == 'Testing':
@@ -100,12 +104,13 @@ class Q_Learning:
 
 			# Update former info.
 			state = next_state
+			action = next_action
 			self.score += reward
 			self.step += 1
 
 			# If game is over (terminal)
 			if terminal:
-				state = self.if_terminal(game_state)
+				state, action = self.if_terminal(game_state)
 
 	def get_progress(self):
 		progress = ''
@@ -147,7 +152,7 @@ class Q_Learning:
 		else:
 			self.epsilon = 0
 
-	def train(self, state, action, reward, next_state, terminal):
+	def train(self, state, action, reward, next_state, next_action, terminal):
 		# If state or next state is not in Q-table, then add it with zeros
 		if state not in self.Q_table.keys():
 			self.Q_table[state] = []
@@ -159,12 +164,13 @@ class Q_Learning:
 				self.Q_table[next_state].append(0)
 
 		action_index = np.argmax(action)
+		next_action_index = np.argmax(next_action)
 		# Update Q-table!
 		if state in self.Q_table.keys() and next_state in self.Q_table.keys():
 			if terminal == True:
 				self.Q_table[state][action_index] = (1 - self.learning_rate) * self.Q_table[state][action_index] + self.learning_rate * (reward)
 			else:
-				self.Q_table[state][action_index] = (1 - self.learning_rate) * self.Q_table[state][action_index] + self.learning_rate * (reward + self.gamma * max(self.Q_table[next_state]))
+				self.Q_table[state][action_index] = (1 - self.learning_rate) * self.Q_table[state][action_index] + self.learning_rate * (reward + self.gamma * self.Q_table[next_state][next_action_index])
 
 	def plotting(self):
 		# Plotting episode - average score
@@ -195,10 +201,11 @@ class Q_Learning:
 		self.score = 0
 
 		# If game is finished, initialize the state
-		state, _, _ = game_state.frame_step(np.zeros([self.Num_action]))
+		action = np.zeros([self.Num_action])
+		state, _, _ = game_state.frame_step(action)
 
-		return state
+		return state, action
 
 if __name__ == '__main__':
-	agent = Q_Learning()
+	agent = SARSA()
 	agent.main()

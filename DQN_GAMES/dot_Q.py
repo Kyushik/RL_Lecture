@@ -8,15 +8,15 @@ from pygame.locals import *
 FPS = 30
 WINDOW_WIDTH = 200
 WINDOW_HEIGHT = 240
-GAME_BOARD_GAP = 20 
+GAME_BOARD_GAP = 20
 ############## Automatic setting (later work)
 GAME_BOARD_SIZE = 40
 GAME_BOARD_HORIZONTAL = int((WINDOW_WIDTH - 2*GAME_BOARD_GAP) / GAME_BOARD_SIZE)
-# 50 is for message  
+# 50 is for message
 GAME_BOARD_VERTICAL = int((WINDOW_HEIGHT - 2*GAME_BOARD_GAP - 30) / GAME_BOARD_SIZE)
 
 # Color setting
-#			      R    G    B 
+#			      R    G    B
 WHITE 		  = (255, 255, 255)
 BLACK 		  = (  0,   0,   0)
 BRIGHT_RED    = (255,   0,   0)
@@ -35,10 +35,10 @@ gameboard_Color = BLACK
 obstacle_Color = LIGHT_GRAY
 text_Color = WHITE
 tile_Color = LIGHT_GRAY
-clicked_tile_Color = RED 
+clicked_tile_Color = RED
 line_Color = WHITE
 food_Color = GREEN
-enemy_Color = RED 
+enemy_Color = RED
 my_Color = BRIGHT_BLUE
 
 def ReturnName():
@@ -46,7 +46,7 @@ def ReturnName():
 
 def Return_Num_Action():
     return 4
-	
+
 class GameState:
 	def __init__(self):
 		global FPS_CLOCK, DISPLAYSURF, BASIC_FONT
@@ -57,7 +57,7 @@ class GameState:
 		DISPLAYSURF = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
 		pygame.display.set_caption('Dot')
 		BASIC_FONT = pygame.font.Font('freesansbold.ttf', 18)
-		
+
 		Movement_list = ['North', 'South', 'West', 'East', 'Stop']
 		difficulty = 'Easy'
 
@@ -69,10 +69,10 @@ class GameState:
 		self.Enemy_list = []
 		self.Food_list = []
 		self.Last_enemy_move = []
-		
+
 		self.Game_board_state, self.Coordinate_info = self.drawGameBoard(difficulty)
 		self.checkForQuit()
-		self.drawBasicBoard()		
+		self.drawBasicBoard()
 
 		self.count_init = 0
 		self.reward_food = 1
@@ -90,13 +90,13 @@ class GameState:
 
 		self.Game_board_state, self.Coordinate_info = self.drawGameBoard(difficulty)
 		self.checkForQuit()
-		
-		self.drawBasicBoard()		
+
+		self.drawBasicBoard()
 		self.count_init = 0
 		self.count_food = 0
-		
+
 	# Main function
-	def frame_step(self, input):									
+	def frame_step(self, input):
 		self.checkForQuit()
 		###################### Game display ######################
 		DISPLAYSURF.fill(bgColor)
@@ -105,71 +105,78 @@ class GameState:
 		# scoreSurf = BASIC_FONT.render('Result: ' + str(self.score), 1, WHITE)
 		# scoreRect = scoreSurf.get_rect()
 		# scoreRect.topleft = (WINDOW_WIDTH - 200, 10)
-		
+
 		self.checkForQuit()
 
 		if self.count_init == 0:
 			# Initialize my position
 			self.My_position = self.Get_random_position()
-			self.Game_board_state[self.My_position[1]][self.My_position[0]] = '@' 
+			self.Game_board_state[self.My_position[1]][self.My_position[0]] = '@'
 
 			# Initialize enemy position
 			self.Enemy_list = [self.Get_random_position()]
 			for i in range(len(self.Enemy_list)):
 				self.Game_board_state[self.Enemy_list[i][1]][self.Enemy_list[i][0]] = '-'
-			
+
 			# Initialize food position
 			self.Food_list = [self.Get_random_position()]
 			for i in range(len(self.Food_list)):
-				self.Game_board_state[self.Food_list[i][1]][self.Food_list[i][0]] = '+'			
-		
+				self.Game_board_state[self.Food_list[i][1]][self.Food_list[i][0]] = '+'
+
 		self.DrawGameBoardState()
 		self.Drawlines()
 
 		# North
 		if input[1] == 1:
-			self.Game_board_state[self.My_position[1]][self.My_position[0]] = 0
-			if self.My_position[1] == 0:
-				self.Game_board_state[3][self.My_position[0]] = '@'
-				self.My_position[1] = 3
-			else:
+
+			if self.My_position[1] != 0:
+				self.Game_board_state[self.My_position[1]][self.My_position[0]] = 0
+			# if self.My_position[1] == 0:
+			# 	self.Game_board_state[3][self.My_position[0]] = '@'
+			# 	self.My_position[1] = 3
+			# else:
+
 				self.Game_board_state[self.My_position[1] - 1][self.My_position[0]] = '@'
 				self.My_position[1] = self.My_position[1] - 1
-		
+
 		# South
 		elif input[0] == 1:
-			self.Game_board_state[self.My_position[1]][self.My_position[0]] = 0
-			if self.My_position[1] == 3:
-				self.Game_board_state[0][self.My_position[0]] = '@'
-				self.My_position[1] = 0
-			else:
+			if self.My_position[1] != 3:
+				self.Game_board_state[self.My_position[1]][self.My_position[0]] = 0
+
+			# if self.My_position[1] == 3:
+			# 	self.Game_board_state[0][self.My_position[0]] = '@'
+			# 	self.My_position[1] = 0
+			# else:
 				self.Game_board_state[self.My_position[1] + 1][self.My_position[0]] = '@'
 				self.My_position[1] = self.My_position[1] + 1
-		
+
 		# East
 		elif input[2] == 1:
-			self.Game_board_state[self.My_position[1]][self.My_position[0]] = 0
-			if self.My_position[0] == 3:
-				self.Game_board_state[self.My_position[1]][0] = '@'
-				self.My_position[0] = 0
-			else:
+			if self.My_position[0] != 3:
+				self.Game_board_state[self.My_position[1]][self.My_position[0]] = 0
+				# if self.My_position[0] == 3:
+				# 	self.Game_board_state[self.My_position[1]][0] = '@'
+				# 	self.My_position[0] = 0
+				# else:
 				self.Game_board_state[self.My_position[1]][self.My_position[0] + 1] = '@'
 				self.My_position[0] = self.My_position[0] + 1
-		
+
 		# West
 		elif input[3] == 1:
-			self.Game_board_state[self.My_position[1]][self.My_position[0]] = 0
+			if self.My_position[0] != 0:
+				self.Game_board_state[self.My_position[1]][self.My_position[0]] = 0
 
-			if self.My_position[0] == 0:
-				self.Game_board_state[self.My_position[1]][3] = '@'	
-				self.My_position[0] = 3
-			else:
+				# if self.My_position[0] == 0:
+				# 	self.Game_board_state[self.My_position[1]][3] = '@'
+				# 	self.My_position[0] = 3
+				# else:
 				self.Game_board_state[self.My_position[1]][self.My_position[0] - 1] = '@'
 				self.My_position[0] = self.My_position[0] - 1
 
-		reward = 0.0
+		reward = -0.01
 
-		#Draw enemy 
+		#Draw enemy
 		for i in range(len(self.Enemy_list)):
 			self.Game_board_state[self.Enemy_list[i][1]][self.Enemy_list[i][0]] = '-'
 
@@ -179,7 +186,7 @@ class GameState:
 		for i in range(len(self.Food_list)):
 			self.Game_board_state[self.Food_list[i][1]][self.Food_list[i][0]] = '+'
 
-		# Eat the foods 
+		# Eat the foods
 		if self.My_position in self.Food_list:
 			reward = self.reward_food
 			self.score += 1.0
@@ -197,7 +204,7 @@ class GameState:
 			reward = self.reward_enemy
 			self.score -= 1
 			state = (tuple(self.My_position), tuple(self.Enemy_list[0]), tuple(self.Food_list[0]))
-			terminal = True 
+			terminal = True
 			self.result = 'Lose'
 
 			self.reinit()
@@ -234,17 +241,17 @@ class GameState:
 		return (textSurf, textRect)
 
 	def drawBasicBoard(self):
-		for i in range(GAME_BOARD_HORIZONTAL+1):		
+		for i in range(GAME_BOARD_HORIZONTAL+1):
 			for j in range(GAME_BOARD_VERTICAL+1):
 				pygame.draw.rect(DISPLAYSURF, gameboard_Color, (GAME_BOARD_GAP + i * GAME_BOARD_SIZE, 50 + GAME_BOARD_GAP + j * GAME_BOARD_SIZE, GAME_BOARD_SIZE, GAME_BOARD_SIZE))
 
-	
+
 	def Drawlines(self):
-		for i in range(GAME_BOARD_HORIZONTAL+1):		
+		for i in range(GAME_BOARD_HORIZONTAL+1):
 			for j in range(GAME_BOARD_VERTICAL+1):
 				pygame.draw.line(DISPLAYSURF, line_Color, (GAME_BOARD_GAP + i * GAME_BOARD_SIZE, GAME_BOARD_GAP + 50),(GAME_BOARD_GAP + i * GAME_BOARD_SIZE, 50 + GAME_BOARD_GAP + GAME_BOARD_VERTICAL * GAME_BOARD_SIZE),2)
 				pygame.draw.line(DISPLAYSURF, line_Color, (GAME_BOARD_GAP, 50 + GAME_BOARD_GAP + j * GAME_BOARD_SIZE), (GAME_BOARD_GAP + GAME_BOARD_HORIZONTAL * GAME_BOARD_SIZE, 50 + GAME_BOARD_GAP + j * GAME_BOARD_SIZE),2)
-							
+
 	def drawGameBoard(self,difficulty):
 		if difficulty == 'Easy':
 			Game_board_state = [[ 0, 0, 0, 0 ],\
@@ -254,7 +261,7 @@ class GameState:
 
 		# Add coordinate info
 		Coordinate_info = [[],[],[]]
-		for i in range(GAME_BOARD_HORIZONTAL):		
+		for i in range(GAME_BOARD_HORIZONTAL):
 			for j in range(GAME_BOARD_VERTICAL):
 
 				center_point = (GAME_BOARD_GAP + i * GAME_BOARD_SIZE + GAME_BOARD_SIZE/2 + 1, 50 + GAME_BOARD_GAP + j * GAME_BOARD_SIZE + GAME_BOARD_SIZE/2 + 1)
@@ -271,12 +278,12 @@ class GameState:
 				elif Game_board_state[j][i] == '@':
 					pygame.draw.rect(DISPLAYSURF, my_Color, (GAME_BOARD_GAP + i * GAME_BOARD_SIZE + 5, 50 + GAME_BOARD_GAP + j * GAME_BOARD_SIZE + 5, GAME_BOARD_SIZE - 5, GAME_BOARD_SIZE - 5))
 					Coordinate_info[0].append([i,j])
-				
-		pygame.display.update()			
+
+		pygame.display.update()
 		return Game_board_state, Coordinate_info
 
 	def DrawGameBoardState(self):
-		for i in range(GAME_BOARD_HORIZONTAL):		
+		for i in range(GAME_BOARD_HORIZONTAL):
 			for j in range(GAME_BOARD_VERTICAL):
 
 				center_point = (GAME_BOARD_GAP + i * GAME_BOARD_SIZE + GAME_BOARD_SIZE/2 + 1, 50 + GAME_BOARD_GAP + j * GAME_BOARD_SIZE + GAME_BOARD_SIZE/2 + 1)
@@ -290,8 +297,8 @@ class GameState:
 					pygame.draw.rect(DISPLAYSURF, enemy_Color, (GAME_BOARD_GAP + i * GAME_BOARD_SIZE + 5, 50 + GAME_BOARD_GAP + j * GAME_BOARD_SIZE + 5, GAME_BOARD_SIZE - 10, GAME_BOARD_SIZE - 10))
 				elif self.Game_board_state[j][i] == '@':
 					pygame.draw.rect(DISPLAYSURF, my_Color, (GAME_BOARD_GAP + i * GAME_BOARD_SIZE + 5, 50 + GAME_BOARD_GAP + j * GAME_BOARD_SIZE + 5, GAME_BOARD_SIZE - 5, GAME_BOARD_SIZE - 5))
-				
-		pygame.display.update()			
+
+		pygame.display.update()
 
 	def ValidMove_list(self, state):
     	# return the valid move( no obstacles and no out of bound)

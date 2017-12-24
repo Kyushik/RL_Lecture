@@ -1,10 +1,10 @@
-# Import modules 
+# Import modules
 import pygame
-import random 
-import numpy as np 
-import matplotlib.pyplot as plt 
-import datetime 
-import time 
+import random
+import numpy as np
+import matplotlib.pyplot as plt
+import datetime
+import time
 
 # Import game
 import sys
@@ -32,7 +32,7 @@ epsilon = first_epsilon
 Num_plot_episode = 200
 
 step = 1
-score = 0 
+score = 0
 episode = 1
 
 # Lists for plotting episode - average score
@@ -57,11 +57,11 @@ state, _, _ = game_state.frame_step(np.zeros([Num_action]))
 action = np.zeros([Num_action])
 action_index = random.randint(0, Num_action-1)
 action[action_index] = 1
-		
+
 while True:
 	if step <= Num_Training:
 		progress = 'Training'
-		
+
 		# Get information from environment with action
 		next_state, reward, terminal = game_state.frame_step(action)
 
@@ -77,21 +77,14 @@ while True:
 			next_action_index = np.argmax(Q_table[next_state])
 			next_action[next_action_index] = 1
 
-		# Update Q-table!
-		if state in Q_table.keys() and next_state in Q_table.keys():
-			if terminal == True:
-				Q_table[state][action_index] = (1 - learning_rate) * Q_table[state][action_index] + learning_rate * (reward)
-			else:
-				Q_table[state][action_index] = (1 - learning_rate) * Q_table[state][action_index] + learning_rate * (reward + gamma * max(Q_table[next_state]))
-
 		# Decrease epsilon while training
 		if epsilon > final_epsilon:
     			epsilon -= first_epsilon/Num_Training
-		
+
 	elif step <= Num_Training + Num_Testing:
 		progress = 'Testing'
 		next_state, reward, terminal = game_state.frame_step(action)
-		
+
 		# Choose greedy action
 		next_action = np.zeros([Num_action])
 		next_action_index = np.argmax(Q_table[next_state])
@@ -116,7 +109,14 @@ while True:
 	elif next_state not in Q_table.keys():
 		Q_table[next_state] = []
 		for i in range(Num_action):
-			Q_table[next_state].append(0)			
+			Q_table[next_state].append(0)
+
+	# Update Q-table!
+	if state in Q_table.keys() and next_state in Q_table.keys():
+		if terminal == True:
+			Q_table[state][action_index] = (1 - learning_rate) * Q_table[state][action_index] + learning_rate * (reward)
+		else:
+			Q_table[state][action_index] = (1 - learning_rate) * Q_table[state][action_index] + learning_rate * (reward + gamma * Q_table[next_state][next_action_index])
 
 	state = next_state
 	action = next_action
@@ -137,7 +137,7 @@ while True:
 		plt.pause(0.000001)
 
 		plot_x = []
-		plot_y = [] 
+		plot_y = []
 
 	# If terminal
 	if terminal == True:
