@@ -35,7 +35,7 @@ class Q_Learning:
 		self.Num_Training = 100000
 		self.Num_Testing  = 1000
 
-		self.learning_rate = 0.01
+		self.learning_rate = 0.1
 		self.gamma = 0.99
 
 		self.first_epsilon = 1.0
@@ -54,7 +54,9 @@ class Q_Learning:
 		self.plot_y = []
 
 		# date - hour - minute of training time
-		self.date_time = str(datetime.date.today()) + '_' + str(datetime.datetime.now().hour) + '_' + str(datetime.datetime.now().minute)
+		self.date_time = str(datetime.date.today()) + '_' + \
+		                 str(datetime.datetime.now().hour) + '_' + \
+						 str(datetime.datetime.now().minute)
 
 		# Empty Q table
 		self.Q_table = {}
@@ -69,8 +71,6 @@ class Q_Learning:
 
 		while True:
 			# Get progress:
-			#   Training: linearly decrease Epsilon
-			#   Testing:  epsilon = 0
 			self.progress = self.get_progress()
 
 			# Select action: 0 = south, 1 = north, 2 = East, 3 = West
@@ -79,18 +79,15 @@ class Q_Learning:
 			# Take action and get info. for update
 			next_state, reward, terminal = game_state.frame_step(action)
 
-			# Decrease epsilon for epsilon greedy
-			self.decrease_epsilon()
-
 			# Training the Q-table!
 			self.train(state, action, reward, next_state, terminal)
+
+			# Plotting
+			self.plotting()
 
 			# Delay for visualization
 			if self.progress == 'Testing':
 				time.sleep(0.25)
-
-			# Plotting
-			self.plotting()
 
 			# Finished!
 			if self.progress == 'Finished':
@@ -132,20 +129,19 @@ class Q_Learning:
 				# Choose greedy action
 				action_index = np.argmax(self.Q_table[state])
 				action[action_index] = 1
+
+			# Decrease epsilon while training
+			if self.epsilon > self.final_epsilon:
+				self.epsilon -= self.first_epsilon/self.Num_Training
+
 		elif self.progress == 'Testing':
 			# Choose greedy action
 			action_index = np.argmax(self.Q_table[state])
 			action[action_index] = 1
 
-		return action
-
-	def decrease_epsilon(self):
-		if self.progress == 'Training':
-			# Decrease epsilon while training
-			if self.epsilon > self.final_epsilon:
-				self.epsilon -= self.first_epsilon/self.Num_Training
-		else:
 			self.epsilon = 0
+
+		return action
 
 	def train(self, state, action, reward, next_state, terminal):
 		# If state or next state is not in Q-table, then add it with zeros
@@ -162,9 +158,11 @@ class Q_Learning:
 		# Update Q-table!
 		if state in self.Q_table.keys() and next_state in self.Q_table.keys():
 			if terminal == True:
-				self.Q_table[state][action_index] = (1 - self.learning_rate) * self.Q_table[state][action_index] + self.learning_rate * (reward)
+				self.Q_table[state][action_index] = (1 - self.learning_rate) * self.Q_table[state][action_index] \
+													 + self.learning_rate * (reward)
 			else:
-				self.Q_table[state][action_index] = (1 - self.learning_rate) * self.Q_table[state][action_index] + self.learning_rate * (reward + self.gamma * max(self.Q_table[next_state]))
+				self.Q_table[state][action_index] = (1 - self.learning_rate) * self.Q_table[state][action_index] \
+				                                     + self.learning_rate * (reward + self.gamma * max(self.Q_table[next_state]))
 
 	def plotting(self):
 		# Plotting episode - average score
