@@ -33,7 +33,7 @@ class DQN_Basic:
 		self.Num_action = game.Return_Num_Action()
 
 		# Initial parameters
-		self.Num_Training = 100000
+		self.Num_Training = 500000
 		self.Num_Testing  = 50000
 
 		self.learning_rate = 0.00025
@@ -54,6 +54,9 @@ class DQN_Basic:
 		self.plot_x = []
 		self.plot_y = []
 
+		# Save test score
+		self.test_score = []
+
 		# date - hour - minute of training time
 		self.date_time = str(datetime.date.today()) + '_' + \
 		                 str(datetime.datetime.now().hour) + '_' + \
@@ -69,8 +72,9 @@ class DQN_Basic:
 		self.first_dense  = [10*10*64, 512]
 		self.second_dense = [512, self.Num_action]
 
-		self.GPU_fraction = 0.3
+		self.GPU_fraction = 0.2
 
+		# Initialize Network
 		self.input, self.output = self.network()
 		self.train_step, self.action_target, self.y_prediction = self.loss_and_train()
 		self.init_sess()
@@ -82,10 +86,12 @@ class DQN_Basic:
 		# Initialization
 		action = np.zeros([self.Num_action])
 		state, _, _ = game_state.frame_step(action)
-		state = self.resize_input(state)
+		state = self.reshape_input(state)
 
 		while True:
 			# Get progress:
+			#	Training: Linearly decease epsilon
+			#	Testing : Epsilon = 0
 			self.progress = self.get_progress()
 
 			# Select action: 0 = south, 1 = north, 2 = East, 3 = West
@@ -93,19 +99,13 @@ class DQN_Basic:
 
 			# Take action and get info. for update
 			next_state, reward, terminal = game_state.frame_step(action)
-			next_state = self.resize_input(next_state)
+			next_state = self.reshape_input(next_state)
 
 			# Training the Q-table!
 			self.train(state, action, reward, next_state, terminal)
 
 			# Plotting
 			self.plotting()
-
-			# Finished!
-			if self.progress == 'Finished':
-				print('Finished!')
-				plt.savefig('./Plot/' + self.date_time + '_' +self.algorithm + '_' + self.game_name + '.png')
-				break
 
 			# Update former info.
 			state = next_state
@@ -115,6 +115,15 @@ class DQN_Basic:
 			# If game is over (terminal)
 			if terminal:
 				state = self.if_terminal(game_state)
+
+			# Finished!
+			if self.progress == 'Finished':
+				print('Finished!')
+
+				avg_test_score = str(sum(self.test_score) / len(self.test_score))
+				print('Average Test score: ' + avg_test_score)
+				plt.savefig('./Plot/' + self.date_time + '_' +self.algorithm + '_' + self.game_name + avg_test_score + '.png')
+				break
 
 	def init_sess(self):
 		# Initialize variables
@@ -137,7 +146,7 @@ class DQN_Basic:
 		return progress
 
 	# Resize and make input as grayscale
-	def resize_input(self, state):
+	def reshape_input(self, state):
 		state_out = cv2.resize(state, (self.img_size, self.img_size))
 		if self.Num_colorChannel == 1:
 			state_out = cv2.cvtColor(state_out, cv2.COLOR_BGR2GRAY)
@@ -162,11 +171,7 @@ class DQN_Basic:
 
 	def network(self):
 		# Input
-		x_image = tf.placeholder(tf.float32, shape = [None,
-													  self.img_size,
-													  self.img_size,
-													  self.Num_colorChannel])
-
+		x_image = tf.placeholder(tf.float32, shape = [None,self.img_size, self.img_size, self.Num_colorChannel])
 		x_normalize = (x_image - (255.0/2)) / (255.0/2)
 
 		with tf.variable_scope('network'):
@@ -240,7 +245,6 @@ class DQN_Basic:
 		return action
 
 	def train(self, state, action, reward, next_state, terminal):
-		# If state or next state is not in Q-table, then add it with zeros
 		y = []
 		Q = self.output.eval(feed_dict = {self.input: [next_state]})
 
@@ -276,6 +280,9 @@ class DQN_Basic:
 			  'Epsilon: ' + str(self.epsilon) + ' / ' +
 			  'Score: ' + str(self.score))
 
+		if self.progress == 'Testing':
+			self.test_score.append(self.score)
+
 		self.plot_x.append(self.episode)
 		self.plot_y.append(self.score)
 		self.episode += 1
@@ -283,7 +290,7 @@ class DQN_Basic:
 
 		# If game is finished, initialize the state
 		state, _, _ = game_state.frame_step(np.zeros([self.Num_action]))
-		state = self.resize_input(state)
+		state = self.reshape_input(state)
 
 		return state
 

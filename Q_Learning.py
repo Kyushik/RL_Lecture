@@ -32,7 +32,7 @@ class Q_Learning:
 		self.Num_action = game.Return_Num_Action()
 
 		# Initial parameters
-		self.Num_Training = 100000
+		self.Num_Training = 200000
 		self.Num_Testing  = 1000
 
 		self.learning_rate = 0.1
@@ -80,7 +80,8 @@ class Q_Learning:
 			next_state, reward, terminal = game_state.frame_step(action)
 
 			# Training the Q-table!
-			self.train(state, action, reward, next_state, terminal)
+			if self.progress == 'Training':
+				self.train(state, action, reward, next_state, terminal)
 
 			# Plotting
 			self.plotting()
