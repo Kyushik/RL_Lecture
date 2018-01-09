@@ -34,7 +34,7 @@ class DQN_Basic:
 
 		# Initial parameters
 		self.Num_Training = 500000
-		self.Num_Testing  = 50000
+		self.Num_Testing  = 100000
 
 		self.learning_rate = 0.00025
 		self.gamma = 0.99
@@ -94,7 +94,7 @@ class DQN_Basic:
 			#	Testing : Epsilon = 0
 			self.progress = self.get_progress()
 
-			# Select action: 0 = south, 1 = north, 2 = East, 3 = West
+			# Select action
 			action = self.select_action(state)
 
 			# Take action and get info. for update

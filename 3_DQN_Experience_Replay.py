@@ -35,7 +35,7 @@ class DQN_Experience_Replay:
 		# Initial parameters
 		self.Num_Exploration = 50000
 		self.Num_Training    = 500000
-		self.Num_Testing     = 50000
+		self.Num_Testing     = 100000
 
 		self.learning_rate = 0.00025
 		self.gamma = 0.99
@@ -102,7 +102,7 @@ class DQN_Experience_Replay:
 			# Get progress:
 			self.progress = self.get_progress()
 
-			# Select action: 0 = south, 1 = north, 2 = East, 3 = West
+			# Select action
 			action = self.select_action(stacked_state)
 
 			# Take action and get info. for update
@@ -164,7 +164,7 @@ class DQN_Experience_Replay:
 
 		# Stack the frame according to the number of skipping frame
 		for stack_frame in range(self.Num_stacking):
-			state_in[:,:,stack_frame] = self.state_set[-1 - (self.Num_skipping * self.Num_stacking)]
+			state_in[:,:,stack_frame] = self.state_set[-1 - (self.Num_skipping * stack_frame)]
 
 		del self.state_set[0]
 
@@ -191,7 +191,6 @@ class DQN_Experience_Replay:
 			state_out = cv2.cvtColor(state_out, cv2.COLOR_BGR2GRAY)
 			state_out = np.reshape(state_out, (self.img_size, self.img_size))
 
-		state_out = np.uint8(state_out)
 		return state_out
 
 	# Convolution and pooling
