@@ -88,7 +88,7 @@ class DQN_Experience_Replay:
 		# Initialize Network
 		self.input, self.output = self.network()
 		self.train_step, self.action_target, self.y_prediction = self.loss_and_train()
-		self.init_sess()
+		self.sess = self.init_sess()
 
 	def main(self):
 		# Define game state
@@ -115,6 +115,7 @@ class DQN_Experience_Replay:
 
 			# Training!
 			if self.progress == 'Training':
+				# Training
 				self.train(self.replay_memory)
 
 			# Plotting
@@ -146,6 +147,8 @@ class DQN_Experience_Replay:
 		sess = tf.InteractiveSession(config=config)
 		init = tf.global_variables_initializer()
 		sess.run(init)
+
+		return sess
 
 	def initialization(self, game_state):
 		action = np.zeros([self.Num_action])

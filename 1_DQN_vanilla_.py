@@ -21,11 +21,11 @@ import tetris
 import wormy
 import breakout
 
-class DQN_skipping_stacking:
+class DQN_Basic:
 	def __init__(self):
 
 		# Game Information
-		self.algorithm = 'DQN_skipping_stacking'
+		self.algorithm = 'DQN_Basic'
 		self.game_name = game.ReturnName()
 
 		# Get parameters
@@ -63,11 +63,6 @@ class DQN_skipping_stacking:
 		                 str(datetime.datetime.now().hour) + '_' + \
 						 str(datetime.datetime.now().minute)
 
-		# parameters for skipping and stacking
-		self.state_set = []
-		self.Num_skipping = 4
-		self.Num_stacking = 4
-
 		# Parameters for network
 		self.img_size = 80
 		self.Num_colorChannel = 1
@@ -91,36 +86,34 @@ class DQN_skipping_stacking:
 
 		# Initialization
 		state = self.initialization(game_state)
-		stacked_state = self.skip_and_stack_frame(state)
 
 		while True:
 			# Get progress:
 			self.progress = self.get_progress()
 
 			# Select action
-			action = self.select_action(stacked_state)
+			action = self.select_action(state)
 
 			# Take action and get info. for update
 			next_state, reward, terminal = game_state.frame_step(action)
 			next_state = self.reshape_input(next_state)
-			stacked_next_state = self.skip_and_stack_frame(next_state)
 
 			# Training!
 			if self.progress == 'Training':
 				# Training
-				self.train(stacked_state, action, reward, stacked_next_state, terminal)
+				self.train(state, action, reward, next_state, terminal)
 
 			# Plotting
 			self.plotting()
 
 			# Update former info.
-			stacked_state = stacked_next_state
+			state = next_state
 			self.score += reward
 			self.step += 1
 
 			# If game is over (terminal)
 			if terminal:
-				stacked_state = self.if_terminal(game_state)
+				state = self.if_terminal(game_state)
 
 			# Finished!
 			if self.progress == 'Finished':
@@ -151,20 +144,6 @@ class DQN_skipping_stacking:
 			self.state_set.append(state)
 
 		return state
-
-	def skip_and_stack_frame(self, state):
-		self.state_set.append(state)
-
-		state_in = np.zeros((self.img_size, self.img_size, self.Num_colorChannel * self.Num_stacking))
-
-		# Stack the frame according to the number of skipping frame
-		for stack_frame in range(self.Num_stacking):
-			state_in[:,:,stack_frame] = self.state_set[-1 - (self.Num_skipping * stack_frame)]
-
-		del self.state_set[0]
-
-		state_in = np.uint8(state_in)
-		return state_in
 
 	def get_progress(self):
 		progress = ''
@@ -251,7 +230,7 @@ class DQN_skipping_stacking:
 
 		return train_step, action_target, y_prediction
 
-	def select_action(self, stacked_state):
+	def select_action(self, state):
 		action = np.zeros([self.Num_action])
 		action_index = 0
 
@@ -268,7 +247,7 @@ class DQN_skipping_stacking:
 				action[action_index] = 1
 			else:
 				# Choose greedy action
-				Q_value = self.output.eval(feed_dict={self.input: [stacked_state]})
+				Q_value = self.output.eval(feed_dict={self.input: [state]})
 				action_index = np.argmax(Q_value)
 				action[action_index] = 1
 
@@ -278,7 +257,7 @@ class DQN_skipping_stacking:
 
 		elif self.progress == 'Testing':
 			# Choose greedy action
-			Q_value = self.output.eval(feed_dict={self.input: [stacked_state]})
+			Q_value = self.output.eval(feed_dict={self.input: [state]})
 			action_index = np.argmax(Q_value)
 			action[action_index] = 1
 
@@ -286,11 +265,11 @@ class DQN_skipping_stacking:
 
 		return action
 
-	def train(self, stacked_state, action, reward, stacked_next_state, terminal):
+	def train(self, state, action, reward, next_state, terminal):
 
 		# Get y_prediction
 		y = []
-		Q = self.output.eval(feed_dict = {self.input: [stacked_next_state]})
+		Q = self.output.eval(feed_dict = {self.input: [next_state]})
 
 		# Get target values
 		if terminal == True:
@@ -300,7 +279,7 @@ class DQN_skipping_stacking:
 
 		self.train_step.run(feed_dict = {self.action_target: [action],
 										 self.y_prediction: y,
-										 self.input: [stacked_state]})
+										 self.input: [state]})
 
 	def plotting(self):
 		# Plotting episode - average score
@@ -342,5 +321,5 @@ class DQN_skipping_stacking:
 		return stacked_state
 
 if __name__ == '__main__':
-	agent = DQN_skipping_stacking()
+	agent = DQN_Basic()
 	agent.main()

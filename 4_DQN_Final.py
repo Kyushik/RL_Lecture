@@ -350,10 +350,10 @@ class DQN_Final:
 	def update_target(self):
 		# Get trainable variables
 		trainable_variables = tf.trainable_variables()
-		# network lstm variables
+		# network variables
 		trainable_variables_network = [var for var in trainable_variables if var.name.startswith('network')]
 
-		# target lstm variables
+		# target variables
 		trainable_variables_target = [var for var in trainable_variables if var.name.startswith('target')]
 
 		for i in range(len(trainable_variables_network)):
