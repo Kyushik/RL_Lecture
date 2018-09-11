@@ -163,7 +163,7 @@ class DQN_Experience_Replay:
 	def skip_and_stack_frame(self, state):
 		self.state_set.append(state)
 
-		state_in = np.zeros((self.img_size, self.img_size, self.Num_colorChannel * self.Num_stacking))
+		state_in = np.zeros((self.img_size, self.img_size, self.Num_stacking))
 
 		# Stack the frame according to the number of skipping frame
 		for stack_frame in range(self.Num_stacking):
@@ -298,8 +298,8 @@ class DQN_Experience_Replay:
 		# If Replay memory is longer than Num_replay_memory, delete the oldest one
 		if len(self.replay_memory) > self.Num_replay_memory:
 			del self.replay_memory[0]
-		else:
-			self.replay_memory.append([state, action, reward, next_state, terminal])
+		
+		self.replay_memory.append([state, action, reward, next_state, terminal])
 
 	def train(self, replay_memory):
 		# Select minibatch

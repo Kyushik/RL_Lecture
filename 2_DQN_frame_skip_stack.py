@@ -82,7 +82,7 @@ class DQN_skipping_stacking:
 
 		# Initialize Network
 		self.input, self.output = self.network()
-		self.train_step, self.action_target, self.y_prediction = self.loss_and_train()
+		self.train_step, self.action_target, self.y_target = self.loss_and_train()
 		self.sess = self.init_sess()
 
 	def main(self):
@@ -155,7 +155,7 @@ class DQN_skipping_stacking:
 	def skip_and_stack_frame(self, state):
 		self.state_set.append(state)
 
-		state_in = np.zeros((self.img_size, self.img_size, self.Num_colorChannel * self.Num_stacking))
+		state_in = np.zeros((self.img_size, self.img_size, self.Num_stacking))
 
 		# Stack the frame according to the number of skipping frame
 		for stack_frame in range(self.Num_stacking):
@@ -243,13 +243,13 @@ class DQN_skipping_stacking:
 	def loss_and_train(self):
 		# Loss function and Train
 		action_target = tf.placeholder(tf.float32, shape = [None, self.Num_action])
-		y_prediction = tf.placeholder(tf.float32, shape = [None])
+		y_target = tf.placeholder(tf.float32, shape = [None])
 
-		y_target = tf.reduce_sum(tf.multiply(self.output, action_target), reduction_indices = 1)
+		y_prediction = tf.reduce_sum(tf.multiply(self.output, action_target), reduction_indices = 1)
 		Loss = tf.reduce_mean(tf.square(y_prediction - y_target))
 		train_step = tf.train.AdamOptimizer(learning_rate = self.learning_rate, epsilon = 1e-02).minimize(Loss)
 
-		return train_step, action_target, y_prediction
+		return train_step, action_target, y_target
 
 	def select_action(self, stacked_state):
 		action = np.zeros([self.Num_action])
@@ -299,7 +299,7 @@ class DQN_skipping_stacking:
 			y.append(reward + self.gamma * np.max(Q))
 
 		self.train_step.run(feed_dict = {self.action_target: [action],
-										 self.y_prediction: y,
+										 self.y_target: y,
 										 self.input: [stacked_state]})
 
 	def plotting(self):
